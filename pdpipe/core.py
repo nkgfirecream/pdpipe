@@ -58,6 +58,67 @@ def __load_stage_attributes_from_module__(module_name):
 # === basic classes ===
 
 
+class PdpApplicationContext(dict):
+    """An object encapsulating the application context of a pipeline.
+
+    Parameters
+    ----------
+    fit_context : PdpApplicationContext, optional
+        Another application context object, representing the application
+        context of a previous fit of the pipelline this application context
+        is initialized for. Optional.
+    """
+
+    def __init__(self, fit_context=None):
+        self.__locked__ = False
+        self.__fit_context__ = fit_context
+
+    def __setitem__(self, key, value):
+        if not self.__locked__:
+            super()[key] = value
+
+    def __delitem__(self, key):
+        if not self.__locked__:
+            del super()[key]
+
+    def pop(self, key, default):
+        """If key is in the dictionary, remove it and return its value, else
+        return default. If default is not given and key is not in the
+        dictionary, a KeyError is raised.
+        """
+        if not self.__locked__:
+            return super().pop(key, default)
+
+    def clear(self):
+        """Remove all items from the dictionary."""
+        if not self.__locked__:
+            super().clear()
+
+    def popitem(self):
+        """Not implemented!"""
+        raise NotImplementedError
+
+    def update(self, other):
+        """Update the dictionary with the key/value pairs from other,
+        overwriting existing keys. Return None.
+
+        update() accepts either another dictionary object or an iterable of
+        key/value pairs (as tuples or other iterables of length two). If
+        keyword arguments are specified, the dictionary is then updated with
+        those key/value pairs: d.update(red=1, blue=2).
+        """
+        if not self._locked__:
+            super().update(other)
+
+    def lock(self):
+        """Locks this application context for changes."""
+        self.__locked__ = True
+
+    def fit_context(self):
+        """Returns a locked PdpApplicationContext object of a previous fit."""
+        return self.__fit_context__
+
+
 class PdPipelineStage(abc.ABC):
     """A stage of a pandas DataFrame-processing pipeline.
 
