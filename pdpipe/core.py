@@ -167,9 +167,22 @@ class PdPipelineStage(abc.ABC):
         """Returns True if this stage can be applied to the given dataframe."""
         raise NotImplementedError
 
-    def _fit_transform(self, df, verbose):
-        """Fits this stage and transforms the input dataframe."""
-        return self._transform(df, verbose)
+    def _fit_transform(self, df, verbose, app_context):
+        """Fits this stage and transforms the input dataframe.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            The input dataframe to fit with and transform.
+        verbose : bool
+            If True an explanation message is printed after the precondition
+            is checked but before the application of the pipeline stage.
+            Defaults to False.
+        app_context : pdpipe.PdpApplicationContext
+            A mapping repesenting context and information about the currently
+            ongoing application of the pipeline this stage is a part of.
+        """
+        return self._transform(df, verbose, app_context)
 
     def _is_fittable(self):
         if self.__class__._fit_transform == PdPipelineStage._fit_transform:
@@ -177,8 +190,21 @@ class PdPipelineStage(abc.ABC):
         return True
 
     @abc.abstractmethod
-    def _transform(self, df, verbose):
-        """Transforms the given dataframe without fitting this stage."""
+    def _transform(self, df, verbose, app_context):
+        """Transforms the given dataframe without fitting this stage.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            The input dataframe to transform.
+        verbose : bool
+            If True an explanation message is printed after the precondition
+            is checked but before the application of the pipeline stage.
+            Defaults to False.
+        app_context : pdpipe.PdpApplicationContext
+            A mapping repesenting context and information about the currently
+            ongoing application of the pipeline this stage is a part of.
+        """
         raise NotImplementedError("_transform method not implemented!")
 
     def apply(self, df, exraise=None, verbose=False):
@@ -186,6 +212,9 @@ class PdPipelineStage(abc.ABC):
 
         If the stage is not fitted fit_transform is called. Otherwise,
         transform is called.
+
+        Equivalent to using this pipeline stage object as a callable on a
+        dataframe.
 
         Parameters
         ----------
@@ -443,11 +472,14 @@ class PdPipeline(PdPipelineStage, collections.abc.Sequence):
         # PdPipeline overrides apply in a way which makes this moot
         raise NotImplementedError
 
-    def apply(self, df, exraise=None, verbose=False):
-        inter_df = df
-        for stage in self._stages:
-            inter_df = stage.apply(inter_df, exraise, verbose)
-        return inter_df
+    def apply(self, df, exraise=None, verbose=False, app_context=None):
+        # inter_df = df
+        # for stage in self._stages:
+        #     inter_df = stage.apply(inter_df, exraise, verbose)
+        # return inter_df
+        if self.is_fitted:
+            return self.transform(df, verbose=verbose)
+        return self.fit_transform(df, verbose=verbose)
 
     def fit_transform(self, X, y=None, exraise=None, verbose=None):
         """Fits this pipeline and transforms the input dataframe.
