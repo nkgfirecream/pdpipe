@@ -48,6 +48,12 @@ Install ``pdpipe`` with:
 
   pip install pdpipe
 
+Or with:
+
+.. code-block:: bash
+
+  conda install pdpipe
+
 Some pipeline stages require ``scikit-learn``; they will simply not be loaded if ``scikit-learn`` is not found on the system, and ``pdpipe`` will issue a warning. To use them you must also `install scikit-learn <http://scikit-learn.org/stable/install.html>`_.
 
 
